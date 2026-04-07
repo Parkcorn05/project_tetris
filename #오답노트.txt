@@ -1,0 +1,17 @@
+#오답노트
+
+void drawGame(void){
+    int x = 0, y = 0;
+    int startX = 2, startY = 1;
+    bool isLine = (x == startX || x == 2 * MapWidth + 4 || y == startY || y == MapHeight + 2);
+
+    for(y = startY; y < MapHeight + 2; y = y + 1) {
+        for(x = startX; x < 2 * MapWidth + 4; x = x + 2) {
+	    // 여기에 isLine = (") 와야함.
+            if(isLine) setText(x, y, 7, "#");
+            else setText(x, y, 7, "*");
+        }
+    }
+    return;
+}
+//문제점 : isLine의 연산이 반복문 이전에 계산됨. 조건식을 반복분 안으로 옮겨야함.

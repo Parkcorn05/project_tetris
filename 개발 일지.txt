@@ -1,0 +1,9 @@
+4/6
+기본 출력 함수들과 drawGame 함수 구현
+drawGame 함수 구현하면서 bool 사용법(위치)에 대해 알게됨.
+일단 테트 구현 목적으로 맵 MapWidth와 MapHeight를 선언하여 각각 10으로 설정. 이후 동적 할당으로 받을 수 있게 변경 필요.
+
+4/7
+참고 문헌 https://dev-with-precious-dreams.tistory.com/7 (방향키)
+블록 및 랜덤 블록 생성 구현
+main 함수 생애주기 틀 생성
