@@ -19,7 +19,7 @@ typedef int bool;
 #define Space 32
 
 //논리적 맵 
-int map[MapHeight][MapWidth];
+int map[MapHeight][MapWidth] = { 0 };
 
 //블럭 모양
 int blocks[][3][3] = {{{1, 1, 1},  //□ □
@@ -50,7 +50,10 @@ void ClrScr(void); //삭제
 
 //오브젝트 동작 함수
 clock_t getLoopTime(clock_t lastTime);
-int makeBlock(void);
+int createBlock(void);
+int fallingBlock(void);
+bool checkActiveBlock(void);
+void allBlockUnactive(void);
 
 //랜덤 값 생성
 int RandomNum(int range);
@@ -75,13 +78,15 @@ int main(void){
                 break;
             }
         }
+
         calOneTick += getLoopTime(lastTime);
         lastTime = clock();
 
         //계산 처리
-        makeBlock();
-        if(calOneTick > 500) {
-
+        if(checkActiveBlock() == -1) createBlock();
+        if(calOneTick > oneTick) {
+            calOneTick = 0;
+            if(fallingBlock() == -1) allBlockUnactive();
         }
 
         //출력 처리
@@ -113,17 +118,19 @@ void drawGame(void){
     int x, y;
     int i, j;
     int startX = 2, startY = 1;
+    int color;
     bool isLine, isBlock;
     
     j = -1; //경계선(line)을 고려해서 j, i 전부 -1부터 시작
     for(y = startY; y < startY + MapHeight + 2; y = y + 1) {
         i = -1;
         for(x = startX; x < startX + 2 * MapWidth + 4; x = x + 2) {
-            isBlock = (map[j][i] == 1);
+            color = map[j][i] < 0 ? -map[j][i] : map[j][i]; //색상 절댓값으로 받기
+            isBlock = (map[j][i] != 0);
             isLine = (x == startX || x == 2 * MapWidth + 4 || y == startY || y == MapHeight + 2);
 
             if(isLine) setText(x, y, 7, "#");
-            else if(isBlock) setText(x, y, 7, "□");
+            else if(isBlock) setText(x, y, color, "□");
             else setText(x, y, 7, " ");
             i++;
         }
@@ -146,14 +153,15 @@ int RandomNum(int range) {
     return rand() % range;
 }
 
-int makeBlock(void) {
+int createBlock(void) {
     int i, j;
     bool isBlockCollision;
     int tempMap[MapHeight][MapWidth];
     int blockWidth = sizeof(blocks[0][0]) / sizeof(int);
     int blockHeight = sizeof(blocks[0]) / blockWidth / sizeof(int);
     int blockNum = sizeof(blocks) / blockHeight / blockWidth / sizeof(int);
-    int randomNum = RandomNum(blockNum);
+    int randomBlock = RandomNum(blockNum);
+    int randomColor = RandomNum(14);
 
     //tempMap 에 map 가져오기
     for(i = 0; i < MapHeight; i++) { 
@@ -165,9 +173,9 @@ int makeBlock(void) {
     //tempMap에 랜덤 block 생성
     for(i = 0; i < blockHeight; i++) {
         for(j = 0; j < blockWidth; j++) {
-            isBlockCollision = (tempMap[i][MapWidth / 2 + j - 1] == 1 && blocks[randomNum][i][j] == 1);
+            isBlockCollision = (tempMap[i][MapWidth / 2 + j - 1] != 0 && blocks[randomBlock][i][j] != 0);
             if(isBlockCollision) return -1; //블록 생성 실패! -1 반환
-            else tempMap[i][MapWidth / 2 + j - 1] = blocks[randomNum][i][j];
+            else if(blocks[randomBlock][i][j] == 1) tempMap[i][MapWidth / 2 + j - 1] = -randomColor; //낙하중인 블럭은 -로 구별
         }
     }
 
@@ -180,3 +188,57 @@ int makeBlock(void) {
 
     return 0;
 }
+
+int fallingBlock(void) {
+    int i, j;
+    int tempMap[MapHeight][MapWidth];
+    bool underIsBlock;
+
+    //tempMap에 map 복사(active 블럭 제외)
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            if(map[i][j] < 0) tempMap[i][j] = 0;
+            else tempMap[i][j] = map[i][j];
+        }
+    }
+
+    //tempMap에 active 블럭 반영
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            if(map[i][j] < 0) {
+                underIsBlock = (map[i + 1][j] > 0 || i + 1 == MapHeight );
+                if(underIsBlock) return -1; //아래가 블럭! 비정상 종료
+                else tempMap[i + 1][j] = map[i][j];
+            }
+        }
+    }
+
+    //map에 tempMap 복사
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            map[i][j] = tempMap[i][j];
+        }
+    }
+    
+    return 0;
+}
+
+bool checkActiveBlock(void) {
+    int i, j;
+
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            if(map[i][j] < 0) return 1;
+        }
+    }
+    return -1;
+}
+
+void allBlockUnactive(void){
+    int i, j;
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            map[i][j] = map[i][j] < 0 ? -map[i][j] : map[i][j];
+        }
+    }
+};
