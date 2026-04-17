@@ -55,28 +55,22 @@ int fallingBlock(void);
 bool checkActiveBlock(void);
 void allBlockUnactive(void);
 
+int moveProcess(int key);
+
 //랜덤 값 생성
 int RandomNum(int range);
 
 int main(void){
     int inp;
     clock_t lastTime = clock(), calOneTick = 0; //마지막 측정 시간, 한틱(블럭이 1칸 떨어지는 시간) 계산용 변수
-    clock_t oneTick = 500; // 1틱 = 0.5초
+    clock_t oneTick = 200; // 1틱
 
     while(1) {
         //입력 처리
-        if(!kbhit) { 
+        if(kbhit()) { 
             inp = getch();
             if(inp == Arrow) inp = getch(); //방향키는 Arrow + 방향 으로 이루어짐. 즉 방향값을 얻기위해 Arrow 날리는 처리
-            switch(inp) {
-                case Up:
-                case Down:
-                case Left:
-                case Right:
-                case Space:
-                case 'z':
-                break;
-            }
+            moveProcess(inp);
         }
 
         calOneTick += getLoopTime(lastTime);
@@ -242,3 +236,74 @@ void allBlockUnactive(void){
         }
     }
 };
+
+int moveProcess(int key) {
+    int i, j;
+    int tempMap[MapHeight + 3][MapWidth + 3] = { 0 };
+    int height = 0;
+    bool IsBlock;
+    int SIGNAL = 0;
+
+    //tempMap에 map 복사(active 블럭 제외)
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            if(map[i][j] < 0) tempMap[i][j] = 0;
+            else tempMap[i][j] = map[i][j];
+        }
+    }
+
+    //tempMap에 active 블럭 반영
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            if(map[i][j] < 0) {
+                switch(key) {
+                    //case Up:
+                    case Down:
+                        IsBlock = (map[i + 1][j] > 0 || i + 1 == MapHeight );
+                        if(IsBlock) return -1; //아래가 블럭! 비정상 종료
+                        else tempMap[i + 1][j] = map[i][j];
+                        break;
+                    case Left:
+                        IsBlock = (map[i][j - 1] > 0 || j - 1 == -1 );
+                        if(IsBlock) return -1; //아래가 블럭! 비정상 종료
+                        else tempMap[i][j - 1] = map[i][j];
+                        break;
+                    case Right:
+                        IsBlock = (map[i][j + 1] > 0 || j + 1 == MapWidth );
+                        if(IsBlock) return -1; //아래가 블럭! 비정상 종료
+                        else tempMap[i][j + 1] = map[i][j];
+                        break;
+                    case Space:
+                        SIGNAL = 0;
+                        while(1) {
+                            int I = i, J = j, height = 1;
+                            
+                            for(; I < MapHeight; I++) { 
+                                for(J = 0; J < MapWidth; J++) {
+                                    if(map[I][J] < 0) {
+                                    IsBlock = (map[I + height + 1][J] > 0 || I + height + 1 >= MapHeight );
+                                    if(IsBlock) {tempMap[I + height][J] = map[I][J];
+                                                SIGNAL = -1;}  //아래가 블럭! 비정상 종료
+                                    }
+                                }
+                            }
+                            if(SIGNAL == -1) break;
+                            height++;
+                        }
+                        break;
+                    case 'z':
+                    break;
+                }
+            }
+            if(SIGNAL == -1) break;
+        }
+        if(SIGNAL == -1) break;
+    }
+
+    //map에 tempMap 복사
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            map[i][j] = tempMap[i][j];
+        }
+    }
+}
