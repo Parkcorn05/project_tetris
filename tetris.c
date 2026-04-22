@@ -274,20 +274,31 @@ int moveProcess(int key) {
                         else tempMap[i][j + 1] = map[i][j];
                         break;
                     case Space:
-                        SIGNAL = 0;
+                    height = 1;
                         while(1) {
-                            int I = i, J = j, height = 1;
                             
-                            for(; I < MapHeight; I++) { 
-                                for(J = 0; J < MapWidth; J++) {
-                                    if(map[I][J] < 0) {
-                                    IsBlock = (map[I + height + 1][J] > 0 || I + height + 1 >= MapHeight );
-                                    if(IsBlock) {tempMap[I + height][J] = map[I][J];
-                                                SIGNAL = -1;}  //아래가 블럭! 비정상 종료
+                            
+                            for(i = 0; i < MapHeight; i++) { 
+                                for(j = 0; j < MapWidth; j++) {
+                                    if(map[i][j] < 0) {
+                                    IsBlock = (map[i + height + 1][j] > 0 || i + height + 1 >= MapHeight );
+                                    if(IsBlock) return -1; //아래가 블럭! 비정상 종료
+                                    tempMap[i + height][j] = map[i][j];
                                     }
                                 }
                             }
-                            if(SIGNAL == -1) break;
+                            for(i = 0; i < MapHeight; i++) { 
+                                for(j = 0; j < MapWidth; j++) {
+                                    map[i][j] = tempMap[i][j];
+                                }
+                            }
+
+                            for(i = 0; i < MapHeight; i++) { 
+                                for(j = 0; j < MapWidth; j++) {
+                                    if(map[i][j] < 0) tempMap[i][j] = 0;
+                                    else tempMap[i][j] = map[i][j];
+                                }
+                            }
                             height++;
                         }
                         break;
