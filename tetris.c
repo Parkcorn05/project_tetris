@@ -18,6 +18,9 @@ typedef int bool;
 #define Right 77
 #define Space 32
 
+//key값
+#define W -99123 //waitingBlock 값
+
 //논리적 맵 
 int map[MapHeight][MapWidth] = { 0 };
 
@@ -57,6 +60,10 @@ void allBlockUnactive(void);
 
 int moveProcess(int key);
 
+//맵 관리 함수
+int deleteBlock(void);
+void arrayBlock(void);
+
 //랜덤 값 생성
 int RandomNum(int range);
 
@@ -81,6 +88,8 @@ int main(void){
         if(calOneTick > oneTick) {
             calOneTick = 0;
             if(fallingBlock() == -1) allBlockUnactive();
+            deleteBlock();
+            arrayBlock();
         }
 
         //출력 처리
@@ -124,7 +133,7 @@ void drawGame(void){
             isLine = (x == startX || x == 2 * MapWidth + 4 || y == startY || y == MapHeight + 2);
 
             if(isLine) setText(x, y, 7, "#");
-            else if(isBlock) setText(x, y, color, "□");
+            else if(isBlock) {gotoxy(x,y); printf("%d",map[j][i]);}//setText(x, y, color, "□");
             else setText(x, y, 7, " ");
             i++;
         }
@@ -154,7 +163,7 @@ int createBlock(void) {
     int blockWidth = sizeof(blocks[0][0]) / sizeof(int);
     int blockHeight = sizeof(blocks[0]) / blockWidth / sizeof(int);
     int blockNum = sizeof(blocks) / blockHeight / blockWidth / sizeof(int);
-    int randomBlock = RandomNum(blockNum);
+    int randomBlock = 1; //RandomNum(blockNum);
     int randomColor = RandomNum(14);
 
     //tempMap 에 map 가져오기
@@ -240,7 +249,7 @@ void allBlockUnactive(void){
 int moveProcess(int key) {
     int i, j;
     int tempMap[MapHeight + 3][MapWidth + 3] = { 0 };
-    int height = 0;
+    int height = 0, minHeight;
     bool IsBlock;
     int SIGNAL = 0;
 
@@ -274,44 +283,72 @@ int moveProcess(int key) {
                         else tempMap[i][j + 1] = map[i][j];
                         break;
                     case Space:
-                    height = 1;
-                        while(1) {
-                            
-                            
-                            for(i = 0; i < MapHeight; i++) { 
-                                for(j = 0; j < MapWidth; j++) {
-                                    if(map[i][j] < 0) {
-                                    IsBlock = (map[i + height + 1][j] > 0 || i + height + 1 >= MapHeight );
-                                    if(IsBlock) return -1; //아래가 블럭! 비정상 종료
-                                    tempMap[i + height][j] = map[i][j];
-                                    }
-                                }
-                            }
-                            for(i = 0; i < MapHeight; i++) { 
-                                for(j = 0; j < MapWidth; j++) {
-                                    map[i][j] = tempMap[i][j];
-                                }
-                            }
-
-                            for(i = 0; i < MapHeight; i++) { 
-                                for(j = 0; j < MapWidth; j++) {
-                                    if(map[i][j] < 0) tempMap[i][j] = 0;
-                                    else tempMap[i][j] = map[i][j];
-                                }
-                            }
+                        height = 0;
+                        while(1){
+                            IsBlock = (map[i+height + 1][j] > 0 || i + height + 1 == MapHeight);
+                            if(IsBlock) break;
                             height++;
                         }
-                        break;
+                        minHeight = minHeight < height ? minHeight : height; 
+                    break;
                     case 'z':
                     break;
                 }
             }
-            if(SIGNAL == -1) break;
         }
-        if(SIGNAL == -1) break;
+    }
+
+    if(key == Space){
+        for(i = 0; i < MapHeight; i++) { 
+            for(j = 0; j < MapWidth; j++) {
+                if(map[i][j] < 0) {
+                    tempMap[i + minHeight][j] = map[i][j];
+                }
+            }
+        }
     }
 
     //map에 tempMap 복사
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            map[i][j] = tempMap[i][j];
+        }
+    }
+}
+
+int deleteBlock(void) {
+    int i, j;
+    int checkLine = 0;
+    int SIGNAL = 0;
+    int n;
+
+    for(i = 0; i < MapHeight; i++) { 
+        for(j = 0; j < MapWidth; j++) {
+            if(map[i][j] != 0) checkLine++;
+        }
+        if(checkLine == MapWidth) {
+            for(j = 0; j < MapWidth; j++) {
+                map[i][j] = W;
+            }
+            SIGNAL = 1;
+        }
+        checkLine = 0;
+    }
+    return (SIGNAL == 1);
+}
+
+void arrayBlock(void) {
+    int i, j;
+    int tempMap[MapHeight][MapWidth];
+    int height = 0;
+
+    for(i = MapHeight - 1; i >= 0; i--){
+        if(map[i][MapWidth - 1] == W) height++;
+        for(j = MapWidth - 1; j >= 0; j--){
+            tempMap[i][j] = map[i - height][j];
+        }
+    }
+
     for(i = 0; i < MapHeight; i++) { 
         for(j = 0; j < MapWidth; j++) {
             map[i][j] = tempMap[i][j];
