@@ -7,3 +7,35 @@ drawGame 함수 구현하면서 bool 사용법(위치)에 대해 알게됨.
 참고 문헌 https://dev-with-precious-dreams.tistory.com/7 (방향키)
 블록 및 랜덤 블록 생성 구현
 main 함수 생애주기 틀 생성
+
+4/17
+할 일 : '블럭 이동', '라인 제거' 구현
+
+문제 : if(kbhit) { 
+            inp = getch();
+            if(inp == Arrow) inp = getch(); //방향키는 Arrow + 방향 으로 이루어짐. 즉 방향값을 얻기위해 Arrow 날리는 처리
+            debug = moveProcess(inp);
+            if(debug == -1) map[0][0] = 7;
+        } 해당 부분 - 입력이 들어올때까지 반복문을 계속 실행시키기를 원했는데 입력이 들어올때까지 대기 상태가 돼버림.
+        해결 : kbhit 이 아닌 kbhit() 함수 형태로 쓰지 않음.
+======================================================================
+     SIGNAL = 0;
+                        while(1) {
+                            int I = i, J = j, height = 1;
+                            
+                            
+                            for(; I < MapHeight; I++) { 
+                                for(J = 0; J < MapWidth; J++) {
+                                    if(map[I][J] < 0) {
+                                    IsBlock = (map[I + height + 1][J] > 0 || I + height + 1 == MapHeight );
+                                    if(IsBlock) {tempMap[I + height][J] = map[I][J];
+                                                SIGNAL = -1;}  //아래가 블럭! 비정상 종료
+                                    }
+                                }
+                            }
+                            if(SIGNAL == -1) break;
+                            height++;
+                        }
+                        break;
+                    case 'z':
+                    break; 해당 부분 - SPACE 입력 처리 부분, SPACE 누르면 게임이 멈춤

@@ -133,7 +133,7 @@ void drawGame(void){
             isLine = (x == startX || x == 2 * MapWidth + 4 || y == startY || y == MapHeight + 2);
 
             if(isLine) setText(x, y, 7, "#");
-            else if(isBlock) {gotoxy(x,y); printf("%d",map[j][i]);}//setText(x, y, color, "□");
+            else if(isBlock) /*{gotoxy(x,y); printf("%d",map[j][i]);} */ setText(x, y, color, "□");
             else setText(x, y, 7, " ");
             i++;
         }
@@ -324,7 +324,7 @@ int deleteBlock(void) {
 
     for(i = 0; i < MapHeight; i++) { 
         for(j = 0; j < MapWidth; j++) {
-            if(map[i][j] != 0) checkLine++;
+            if(map[i][j] > 0) checkLine++;
         }
         if(checkLine == MapWidth) {
             for(j = 0; j < MapWidth; j++) {
@@ -343,10 +343,13 @@ void arrayBlock(void) {
     int height = 0;
 
     for(i = MapHeight - 1; i >= 0; i--){
-        if(map[i][MapWidth - 1] == W) height++;
         for(j = MapWidth - 1; j >= 0; j--){
+            if(i-height < 0) tempMap[i][j] = 0; //배열 범위 초과 방지
+            else {
             tempMap[i][j] = map[i - height][j];
+            }
         }
+        if(tempMap[i][0] == W) {i++; height++;} //라인 1번 더 검사
     }
 
     for(i = 0; i < MapHeight; i++) { 
