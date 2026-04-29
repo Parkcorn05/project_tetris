@@ -7,7 +7,7 @@
 typedef int bool;
 
 //맵 크기
-#define MapWidth 20 //임시로 10 x 10 으로 설정
+#define MapWidth 10 //임시로 10 x 10 으로 설정
 #define MapHeight 20
 
 //방향키 및 스패이스바
@@ -133,7 +133,7 @@ void drawGame(void){
             isLine = (x == startX || x == 2 * MapWidth + 4 || y == startY || y == MapHeight + 2);
 
             if(isLine) setText(x, y, 7, "#");
-            else if(isBlock) /*{gotoxy(x,y); printf("%d",map[j][i]);} */ setText(x, y, color, "□");
+            else if(isBlock) /*{gotoxy(x,y); printf("%d",map[j][i]);}*/  setText(x, y, color, "□");
             else setText(x, y, 7, " ");
             i++;
         }
@@ -163,7 +163,7 @@ int createBlock(void) {
     int blockWidth = sizeof(blocks[0][0]) / sizeof(int);
     int blockHeight = sizeof(blocks[0]) / blockWidth / sizeof(int);
     int blockNum = sizeof(blocks) / blockHeight / blockWidth / sizeof(int);
-    int randomBlock = 1; //RandomNum(blockNum);
+    int randomBlock = RandomNum(blockNum);
     int randomColor = RandomNum(14);
 
     //tempMap 에 map 가져오기
@@ -247,11 +247,16 @@ void allBlockUnactive(void){
 };
 
 int moveProcess(int key) {
-    int i, j;
+    int i, j, I, J;
     int tempMap[MapHeight + 3][MapWidth + 3] = { 0 };
     int height = 0, minHeight;
     bool IsBlock;
     int SIGNAL = 0;
+    int startx = MapWidth, starty = MapHeight;
+    int endx = 0, endy = 0;
+    int blockWidth = sizeof(blocks[0][0]) / sizeof(int);
+    int blockHeight = sizeof(blocks[0]) / blockWidth / sizeof(int);
+    int tempBlock[blockHeight][blockWidth];
 
     //tempMap에 map 복사(active 블럭 제외)
     for(i = 0; i < MapHeight; i++) { 
@@ -292,10 +297,55 @@ int moveProcess(int key) {
                         minHeight = minHeight < height ? minHeight : height; 
                     break;
                     case 'z':
+                        for(i = 0; i < MapHeight; i++) {
+                            for(j = 0; j < MapWidth; j++){
+                                if(map[i][j] < 0) {
+                                    startx = j < startx ? j : startx;
+                                    starty = i < starty ? i : starty;
+                                    endx = endx < j ? j : endx;
+                                    endy = endy < i ? i : endy;
+                                }
+                            }
+                        }
+                        setText(25,20, 7, "1완료");
+
+                        i = 0; I = starty; 
+                        while(1){
+                            if(I > endy || i > endy - starty) break;
+                            j = 0; J = startx;
+                            while(1){
+                                if(J > endx || j > endx - endy) break;
+                                if(map[I][J] < 0) tempBlock[i][j] = map[I][J];
+                                else tempBlock[i][j] = 0;
+                                J++; j++;
+                            }
+                            I++; i++;
+                        }
+                        setText(25,20, 7, "2완료");
+
+                        i = 0; J = startx + endy - starty; 
+                        while(1){
+                            if(i > endx - startx) break;
+                            I = starty; j = 0; 
+                            while(1){
+                                if(j > endy - starty) break;
+                                if(tempBlock[i][j] < 0) {
+                                    IsBlock = (tempMap[I][J] > 0);
+                                    if(IsBlock) return -1;
+                                    else tempMap[I][J] = tempBlock[i][j];
+                                }
+                                I++; j++;
+                            }
+                            J--; i++;
+                        }
+                        SIGNAL = 1;
+                        setText(25,20, 7, "3완료");
                     break;
                 }
             }
+            if(SIGNAL == 1) break;
         }
+        if(SIGNAL == 1) break;
     }
 
     if(key == Space){
