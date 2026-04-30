@@ -93,7 +93,7 @@ int main(void){
         }
 
         //출력 처리
-        ClrScr();
+        //ClrScr();
         drawGame();
     }
     return 0;
@@ -256,7 +256,8 @@ int moveProcess(int key) {
     int endx = 0, endy = 0;
     int blockWidth = sizeof(blocks[0][0]) / sizeof(int);
     int blockHeight = sizeof(blocks[0]) / blockWidth / sizeof(int);
-    int tempBlock[blockHeight][blockWidth];
+    int tempBlock[3][3] = {0};
+
 
     //tempMap에 map 복사(active 블럭 제외)
     for(i = 0; i < MapHeight; i++) { 
@@ -307,28 +308,26 @@ int moveProcess(int key) {
                                 }
                             }
                         }
-                        setText(25,20, 7, "1완료");
 
                         i = 0; I = starty; 
                         while(1){
                             if(I > endy || i > endy - starty) break;
                             j = 0; J = startx;
                             while(1){
-                                if(J > endx || j > endx - endy) break;
+                                if(J > endx || j > endx - startx) break;
                                 if(map[I][J] < 0) tempBlock[i][j] = map[I][J];
                                 else tempBlock[i][j] = 0;
                                 J++; j++;
                             }
                             I++; i++;
                         }
-                        setText(25,20, 7, "2완료");
 
                         i = 0; J = startx + endy - starty; 
                         while(1){
-                            if(i > endx - startx) break;
+                            if(i > endy - starty) break;
                             I = starty; j = 0; 
                             while(1){
-                                if(j > endy - starty) break;
+                                if(j > endx - startx) break;
                                 if(tempBlock[i][j] < 0) {
                                     IsBlock = (tempMap[I][J] > 0);
                                     if(IsBlock) return -1;
@@ -339,7 +338,6 @@ int moveProcess(int key) {
                             J--; i++;
                         }
                         SIGNAL = 1;
-                        setText(25,20, 7, "3완료");
                     break;
                 }
             }
